@@ -147,8 +147,6 @@ namespace CheckPwnedPasswords
             long high = sr.Length;
             long low = 0L;
 
-            int ch;
-
             while (low <= high)
             {
                 long middle = (low + high + 1) / 2;
@@ -162,16 +160,20 @@ namespace CheckPwnedPasswords
 				{
 					middle -= 1;
 					sr.Seek(middle, SeekOrigin.Begin);
-					ch = sr.ReadByte();
-					if (ch == 0x0d)
-					{
-						ch = sr.ReadByte();
-						if (ch == 0x0a && middle < sr.Length - 1)
-						{
-							middle += 2;
-							do_seek = false;
-						}
-					}
+					int ch1 = sr.ReadByte();
+                    int ch2 = sr.ReadByte();
+                    if (ch1 == 0x0d && ch2 == 0x0a)
+                    {
+                        //Windows NL(0d0a) and file position is on 0x0d
+                        middle += 2;
+                        do_seek = false;
+                    }
+                    if (ch1 == 0x0a)
+                    {
+                        //Windows NL(0d0a) or Posix NL(0a) and file position is on 0x0a
+                        middle += 1;
+                        do_seek = false;
+                    }
 				}
 				sr.Seek(middle, SeekOrigin.Begin);
 
